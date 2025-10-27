@@ -123,8 +123,7 @@ class SecureTerminal:
             
             try:
                 plaintext = self.channel.receive_secure_message(package)
-                print(f"\n[{data['sender']} → {self.name}]: {plaintext}")
-                print(f"{self.name}> ", end="", flush=True)
+                print(f"\r[{data['sender']} → {self.name}]: {plaintext}\n")
                 
                 self.received_messages.append({
                     'from': data['sender'],
@@ -134,7 +133,8 @@ class SecureTerminal:
                 
             except Exception as e:
                 print(f"\n✗ Error: {e}")
-                print(f"{self.name}> ", end="", flush=True)
+                
+            print(f"{self.name}> ", end="", flush=True)
     
     def send_message(self, message):
         """Send a secure message over the network"""
