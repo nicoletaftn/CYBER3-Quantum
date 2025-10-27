@@ -7,9 +7,9 @@ A practical implementation of a hybrid cryptographic protocol combining Quantum 
 ## 📋 Table of Contents
 
 - [Overview](#overview)
-- [Motivation](#motivation)
 - [Features](#features)
 - [Architecture](#architecture)
+- [Protocol Flow](#protocol-flow)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Project Structure](#project-structure)
@@ -25,26 +25,6 @@ This project demonstrates a **future-proof secure communication system** that co
 3. **AES-256-GCM** - Symmetric encryption using QKD-derived keys
 
 The system provides end-to-end encrypted communication between two parties over a network, protecting against both classical and quantum adversaries.
-
----
-
-## 💡 Motivation
-
-### The Quantum Threat
-
-Current public-key cryptography (RSA, ECC) is vulnerable to quantum computers via Shor's algorithm. As quantum computing advances, we need cryptographic solutions that can:
-
-- Resist quantum attacks (PQC)
-- Provide information-theoretic security (QKD)
-- Be practical for deployment today
-
-### Hybrid Approach Benefits
-
-| Component | Purpose | Security Basis |
-|-----------|---------|----------------|
-| **QKD (BB84)** | Symmetric key generation | Laws of quantum physics |
-| **PQC (ML-DSA-65)** | Authentication & signatures | Mathematical hardness (lattices) |
-| **AES-256** | Message encryption | Computational hardness |
 
 ---
 
@@ -108,15 +88,38 @@ Alice                                            Bob
 ```
 ---
 
+## Protocol Flow
+Cryptographic Exchange Between Alice and Bob
+
+**Authentication Setup**
+1. Alice generates ML-DSA-65 keypair → (Public Key A, Private Key A)
+2. Bob generates ML-DSA-65 keypair → (Public Key B, Private Key B)
+
+**Public Key Exchange**
+
+4. Alice → Bob: Public Key A
+5. Bob → Alice: Public Key B
+
+**Quantum Key Distribution (BB84)**
+
+6. Alice generates QKD key via BB84
+- Prepares random qubits
+- Sends qubits to Bob over quantum channel
+- Bob measures qubits
+- Basis reconciliation
+- Error detection
+- Result: 128-bit symmetric key (K_QKD)
+7. Alice → Bob: K_QKD (over TCP)
+  
+**Secure Message Exchange**
+
+8. Alice encrypts message → AES-256-GCM(message, K_QKD) → (nonce, tag, ciphertext)
+9. Alice signs encrypted package → ML-DSA-65.Sign(encrypted_package, Private Key A) → signature
+10. Alice → Bob: encrypted_package + signature
+11. Bob verifies signature → ML-DSA-65.Verify(encrypted_package, signature, Public Key A)
+12. Bob decrypts message → AES-256-GCM.Decrypt(encrypted_package, K_QKD) → plaintext
+
 ## 🛠️ Installation
-
-### Prerequisites
-
-- **Operating System**: macOS 14+ (Apple Silicon tested), Linux (expected to work), Windows (requires manual setup)
-- **Python**: 3.10 or higher
-- **Homebrew** (macOS): For installing liboqs
-
----
 
 ### Windows Installation (Using WSL)
 
