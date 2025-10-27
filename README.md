@@ -166,7 +166,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install Python dependencies
-pip install qunetsim liboqs-python pycryptodome
+pip install -r requirements.txt
 
 #Verify installation
 python test_setup.py
@@ -229,7 +229,7 @@ source venv/bin/activate
 pip install --upgrade pip
 
 # Install Python dependencies
-pip install qunetsim liboqs-python pycryptodome
+pip install -r requirements.txt
 
 # Verify installation
 python test_setup.py
