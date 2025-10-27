@@ -30,7 +30,7 @@ The system provides end-to-end encrypted communication between two parties over 
 
 ## Features
 
-- BB84 Quantum Key Distribution protocol (simulated via QuNetSim)
+- BB84 Quantum Key Distribution protocol (simulated via [QuNetSim](https://github.com/tqsd/QuNetSim))
 - ML-DSA-65 post-quantum digital signatures
 - AES-256-GCM authenticated encryption
 - Network-based two-terminal communication
