@@ -1,0 +1,13 @@
+# Quantum Network Simulation
+qunetsim
+
+# Post-Quantum Cryptography
+liboqs-python
+
+# Symmetric Encryption
+pycryptodome
+
+# Additional utilities
+numpy
+matplotlib
+pytest
