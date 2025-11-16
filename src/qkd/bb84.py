@@ -114,6 +114,7 @@ class BB84Protocol:
         key = self._bits_to_bytes(final_bits)
         
         print(f"✓ Generated {len(key)} bytes ({self.key_length} bits)")
+        print(f"  Shared Secret Key (Hexidecimal): {key.hex()}") 
         
         return key
     
