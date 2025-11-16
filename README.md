@@ -325,7 +325,6 @@ hybrid-quantum-crypto/
 │   │   └── socket_comm.py          # Network communication
 │   └── terminal/
 │       └── secure_terminal.py      # User interface
-├── tests/
 ├── test_setup.py                   # Environment verification
 ├── requirements.txt                # Python dependencies
 └── README.md
