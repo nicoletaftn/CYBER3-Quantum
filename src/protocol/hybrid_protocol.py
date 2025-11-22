@@ -105,6 +105,8 @@ class HybridSecureChannel:
         if isinstance(message, str):
             message = message.encode('utf-8')
         
+        if self.cipher is None:
+            raise RuntimeError("Cipher not initialized. Establish QKD session first.")
         encrypted = self.cipher.encrypt(message)
         encrypted_bytes = (
             encrypted['nonce'] + 
@@ -149,6 +151,8 @@ class HybridSecureChannel:
         if not is_valid:
             raise ValueError(f"Signature verification failed! Message from {sender} may be forged.")
         
+        if self.cipher is None:
+            raise RuntimeError("Cipher not initialized. Establish QKD session first.")
         plaintext = self.cipher.decrypt_message(encrypted_bytes)
         return plaintext.decode('utf-8')
     
