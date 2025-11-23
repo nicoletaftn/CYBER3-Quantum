@@ -72,6 +72,7 @@ The system provides end-to-end encrypted communication between two parties over 
 ```
 
 ### Communication Flow
+
 ```bash
 Alice                                            Bob
 │                                               │
@@ -86,12 +87,15 @@ Alice                                            Bob
 │◄────────── 5. Encrypted Response ─────────────┤
 │                                               │
 ```
+
 ---
 
 ## Protocol Flow
+
 Cryptographic Exchange Between Alice and Bob
 
 **Authentication Setup**
+
 1. Alice generates ML-DSA-65 keypair → (Public Key A, Private Key A)
 2. Bob generates ML-DSA-65 keypair → (Public Key B, Private Key B)
 
@@ -102,15 +106,16 @@ Cryptographic Exchange Between Alice and Bob
 
 **Quantum Key Distribution (BB84)**
 
-6. Alice generates QKD key via BB84
-- Prepares random qubits
-- Sends qubits to Bob over quantum channel
-- Bob measures qubits
-- Basis reconciliation
-- Error detection
-- Result: 128-bit symmetric key (K_QKD)
-7. Alice → Bob: K_QKD (over TCP)
-  
+6. Alice generates QKD key via BB84.
+  - Prepares random qubits.
+  - Sends qubits to Bob over quantum channel.
+  - Bob measures qubits.
+  - Basis reconciliation.
+  - Error detection.
+  - Result: 128-bit symmetric key (K_QKD).
+
+7. Alice → Bob: K_QKD (over TCP).
+
 **Secure Message Exchange**
 
 8. Alice encrypts message → AES-256-GCM(message, K_QKD) → (nonce, tag, ciphertext)
@@ -126,14 +131,19 @@ Cryptographic Exchange Between Alice and Bob
 The easiest way to run this project on Windows is using **Windows Subsystem for Linux (WSL)**, which provides a Linux environment.
 
 Open **PowerShell as Administrator** (Right-click → "Run as Administrator"):
+
 ```powershell
 wsl --install
 ```
+
 Restart computer when prompted then open elevated powershell and install ubuntu
+
 ```powershell
 wsl.exe --install ubuntu
 ```
+
 Create a username and password when prompted then run the following commands
+
 ```bash
 # Update system packages
 sudo apt update && sudo apt upgrade -y
@@ -169,9 +179,11 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 #Verify installation
-python test_setup.py
+python tests/test_setup.py
 ```
+
 Expected output:
+
 ```bash
 Testing Environment Setup...
 ------------------------------
@@ -181,11 +193,13 @@ Testing Environment Setup...
 ------------------------------
 ✓ Ready to start development!
 ```
+
 ---
 
 ### MacOS Installation (Homebrew)
 
 Install dependecies
+
 ```bash
 # Install Python 3.11+, cmake and Ninja
 brew install python@3.11 cmake ninja
@@ -194,7 +208,9 @@ brew install python@3.11 cmake ninja
 python3 --version
 cmake --version
 ```
+
 Build and Install liboqs with Shared Libraries
+
 ```bash
 # Clone liboqs repository
 cd ~
@@ -212,7 +228,9 @@ sudo ninja install
 # Verify shared library was created
 ls /opt/homebrew/opt/liboqs/lib/liboqs.dylib
 ```
+
 Clone the project and setup Python
+
 ```bash
 # Clone the project
 cd ~/Desktop  # or your preferred location
@@ -232,9 +250,11 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 # Verify installation
-python test_setup.py
+python tests/test_setup.py
 ```
+
 Expected output:
+
 ```bash
 Testing Environment Setup...
 ------------------------------
@@ -244,79 +264,97 @@ Testing Environment Setup...
 ------------------------------
 ✓ Ready to start development!
 ```
+
 ---
 
 ## 🚀 Usage
+
 Running the Secure Terminals
 The system requires two terminal windows - one for each party (Alice and Bob).
 
 **Terminal 1: Start Alice (Server)**
+
 ```bash
 cd src/terminal
 python secure_terminal.py --name Alice --role server --peer Bob
 ```
-Alice will:
-1. Start listening on port 9999
-2. Wait for Bob to connect
-3. Generate ML-DSA-65 keypair
-4. Exchange public keys
-5. Generate QKD key (takes ~1-2 minutes)
-6. Enter interactive mode
 
+Alice will:
+
+1. Start listening on port 9999.
+2. Wait for Bob to connect.
+3. Generate ML-DSA-65 keypair.
+4. Exchange public keys.
+5. Generate QKD key (takes ~1-2 minutes).
+6. Enter interactive mode.
 
 **Terminal 2: Start Bob (Client)**
+
 ```bash
 cd src/terminal
 python secure_terminal.py --name Bob --role client --peer Alice
 ```
-Bob will: 
-1. Connect to Alice
-2. Generate ML-DSA-65 keypair
-3. Exchange public keys
-4. Receive QKD key from Alice
-5. Enter interactive mode
 
-Interactive Commands
-Once both terminals show "INTERACTIVE MODE - Ready to communicate!", you can:
-bash# Send a message (just type and press Enter)
-Alice> Hello Bob! This is quantum-safe!
+Bob will:
+
+1. Connect to Alice.
+2. Generate ML-DSA-65 keypair.
+3. Exchange public keys.
+4. Receive QKD key from Alice.
+5. Enter interactive mode.
+
+Once both terminals show "INTERACTIVE MODE - Ready to communicate!", you can start sending messages or type commands.
 
 ### Check connection status
+
 ```bash
 Alice> /status
 ```
 
 ### View message history
+
 ```bash
 Alice> /history
 ```
+
 ### Get help
+
 ```bash
 Alice> /help
 ```
+
 ### Exit
+
 ```bash
 Alice> /quit
 ```
+
 ## Advanced Usage
+
 ### Use custom host and port
+
 ```bash
 python secure_terminal.py --name Alice --role server --peer Bob --host 0.0.0.0 --port 8888
 ```
 
 ### Connect to remote server
+
 ```bash
 python secure_terminal.py --name Bob --role client --peer Alice --host 192.168.1.100 --port 8888
 ```
+
 ---
+
 ## 📁 Project Structure
+
 ```bash
 hybrid-quantum-crypto/
 ├── src/
 │   ├── qkd/
 │   │   └── bb84.py                 # BB84 QKD implementation
 │   ├── pqc/
-│   │   └── ml_dsa_auth.py          # ML-DSA-65 authentication
+│   │   ├── ml_dsa_auth.py          # ML-DSA-65 authentication
+│   │   └── oqs_config.py           # liboqs path configuration (for macOS/WSL)
 │   ├── crypto/
 │   │   └── aes_cipher.py           # AES-256-GCM encryption
 │   ├── protocol/
@@ -325,8 +363,10 @@ hybrid-quantum-crypto/
 │   │   └── socket_comm.py          # Network communication
 │   └── terminal/
 │       └── secure_terminal.py      # User interface
-├── test_setup.py                   # Environment verification
+├── tests/
+│   ├── security_tests.py           # Tests for security properties (MITM, tampering, QKD error)
+│   ├── benchmark.py                # Performance benchmarking for PQC, AES, and QKD
+│   └── test_setup.py               # Environment verification
 ├── requirements.txt                # Python dependencies
 └── README.md
 ```
-          
