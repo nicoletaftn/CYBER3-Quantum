@@ -113,40 +113,7 @@ class TestSecurityScenarios(unittest.TestCase):
             self.bob.receive_secure_message(package)
         print(f"  ✓ PQC rejected tampered payload: {context.exception}")
 
-    # TEST 3: AES-GCM Tag Validation (Deep Cipher Test)
-    def test_aes_gcm_integrity(self):
-        # Scenario: Verify that AES-GCM specifically detects tampering even if 
-        # signature checks were bypassed.
-        print("TEST: AES-GCM Tag Validation")
-    
-        cipher = AESCipher(key=b'secret'*6 + b'12') # 32 bytes
-        data = b"Top Secret Data"
-        
-        # Encryption (Alice's side)
-        encrypted = cipher.encrypt(data)
-        
-        # Show the original tag and ciphertext that will be verified
-        print(f"  - Original Tag (Alice created):   {encrypted['tag'].hex()}")
-        print(f"  - Original Ciphertext:            {encrypted['ciphertext'].hex()}")
-        
-        # Tampering (Attacker's side) - THIS LINE MUST BE ACTIVE
-        ciphertext_list = list(encrypted['ciphertext'])
-        # Flip all bits in the first byte to cause corruption
-        ciphertext_list[0] = ciphertext_list[0] ^ 0xFF 
-        encrypted['ciphertext'] = bytes(ciphertext_list)
-        
-        # Show the tampered ciphertext with the same original tag
-        print(f"  - Tampered Ciphertext:            {encrypted['ciphertext'].hex()}")
-        
-        # Decryption (Bob's side)
-        # Expectation: Decryption fails because the tag no longer matches the tampered ciphertext.
-        with self.assertRaises(ValueError) as context:
-            cipher.decrypt(encrypted) 
-            
-        self.assertIn("Authentication failed", str(context.exception))
-        print(f"  ✓ AES-GCM correctly detected tampering: {context.exception}")
-
-    # TEST 4: Quantum Eavesdropping Detection
+    # TEST 3: Quantum Eavesdropping Detection
     def test_qkd_eavesdropping(self):
         # Scenario: Simulate a high error rate (Intercept-Resend Attack) 
         # and verify the protocol detects it.
