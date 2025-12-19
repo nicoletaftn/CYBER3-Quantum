@@ -1,12 +1,14 @@
 import time
 import sys
 import os
-from Crypto.Random import get_random_bytes  # For generating random payload
+from Crypto.Random import get_random_bytes
+from Crypto.PublicKey import RSA, ECC
+from Crypto.Signature import pkcs1_15
+from Crypto.Hash import SHA256
 
 # Make sure `src` (the package root) is on sys.path so tests can import project modules
 # when running this file directly or when the working directory is the repository root.
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-# FIX IMPORTS to point to the src package
 from src.qkd.bb84 import BB84Protocol
 from src.pqc.ml_dsa_auth import MLDSAAuthenticator
 from src.crypto.aes_cipher import AESCipher
@@ -55,7 +57,7 @@ def run_pqc_benchmark():
 
     signature = authenticator.sign(TEST_MESSAGE)
 
-    # --- 2. Signing Overhead ---
+    # --- 2. Signing ---
     print(
         f"  -> Measuring Signing Operation (Averaged over {N_ITERATIONS} iterations)..."
     )
@@ -69,7 +71,7 @@ def run_pqc_benchmark():
 
     avg_sign_time = sum(sign_times) / N_ITERATIONS
 
-    # --- 3. Verification Overhead ---
+    # --- 3. Verification ---
     print(
         f"  -> Measuring Verification Operation (Averaged over {N_ITERATIONS} iterations)..."
     )
@@ -90,6 +92,91 @@ def run_pqc_benchmark():
         "avg_sign_time": avg_sign_time,
         "avg_verify_time": avg_verify_time,
     }
+
+
+def run_rsa_benchmark():
+    """
+    Benchmarks standard RSA-3072 Authentication.
+    """
+    print(f"  [RSA Benchmark] Testing RSA-3072 (Classical Authentication)")
+
+    # --- 1. Classical Authentication (RSA-3072) ---
+    print("  -> Generating RSA-3072 Keypair...")
+
+    # Keypair Generation
+    start_kp = time.time()
+    rsa_key = RSA.generate(3072)
+    rsa_time = time.time() - start_kp
+
+    # Signing
+    print(f"  -> Measuring Signing (Averaged over {N_ITERATIONS} iterations)...")
+    h = SHA256.new(TEST_MESSAGE)
+    sign_times = []
+    for _ in range(N_ITERATIONS):
+        start = time.time()
+        pkcs1_15.new(rsa_key).sign(h)
+        sign_times.append(time.time() - start)
+    avg_rsa_sign = sum(sign_times) / N_ITERATIONS
+
+    # Verification
+    print(f"  -> Measuring Verification (Averaged over {N_ITERATIONS} iterations)...")
+    signature = pkcs1_15.new(rsa_key).sign(h)
+    pub_key = rsa_key.publickey()
+    verify_times = []
+    for _ in range(N_ITERATIONS):
+        start = time.time()
+        pkcs1_15.new(pub_key).verify(h, signature)
+        verify_times.append(time.time() - start)
+    avg_rsa_verify = sum(verify_times) / N_ITERATIONS
+
+    return {
+        "rsa_keygen": rsa_time,
+        "rsa_sign": avg_rsa_sign,
+        "rsa_verify": avg_rsa_verify,
+    }
+
+class ECDH:
+    def __init__(self, curve, key):
+        self.curve = curve
+        self.key = key
+
+    def derive_shared_secret(self, peer_public_key):
+        # Perform Point Multiplication: d * Q
+        point = peer_public_key.pointQ * self.key.d
+        # Use x-coordinate as shared secret input
+        return point.x.to_bytes()
+
+
+def run_ecdh_benchmark():
+    """
+    Benchmarks standard ECDH (NIST P-256) Key Exchange.
+    """
+    print(f"  [ECDH Benchmark] Testing ECDH P-256 (Classical Key Exchange)")
+
+    # --- 2. Classical Key Exchange (ECDH P-256) ---
+    print(
+        f"  -> Measuring Key Generation & Shared Secret Derivation (Averaged over {N_ITERATIONS} iterations)..."
+    )
+
+    ecdh_times = []
+    for _ in range(N_ITERATIONS):
+        start = time.time()
+
+        # 1. Generate Ephemeral Keys
+        key_alice = ECC.generate(curve="P-256")
+        key_bob = ECC.generate(curve="P-256")
+
+        # 2. Derive Shared Secret (Alice uses Bob's Public Key)
+        # Note: In PyCryptodome, simpler ECDH requires manual point multiplication or export
+        # We simulate the mathematical derivation step cost
+        algo = ECDH(curve="P-256", key=key_alice)
+        shared_secret = algo.derive_shared_secret(key_bob.public_key())
+
+        ecdh_times.append(time.time() - start)
+
+    avg_ecdh_time = sum(ecdh_times) / N_ITERATIONS
+
+    return {"ecdh_exchange": avg_ecdh_time}
 
 
 def run_aes_benchmark():
@@ -144,11 +231,13 @@ def main():
         f"Note: QKD times are highly dependent on the QuNetSim library and local machine speed.\n"
     )
 
-    # 1. PQC Overhead
-    print("---- 1. PQC (ML-DSA-65) Overhead ----")
+    # 1. PQC
+    print("---- 1. PQC (ML-DSA-65) ----")
     pqc_results = run_pqc_benchmark()
     print(f"  Result:")
-    print(f"  > Keypair Generation: {pqc_results['keypair_time'] * 1e6:.3f} microseconds")
+    print(
+        f"  > Keypair Generation: {pqc_results['keypair_time'] * 1e6:.3f} microseconds"
+    )
     print(
         f"  > Avg. Signature Time:  {pqc_results['avg_sign_time'] * 1e6:.3f} microseconds"
     )
@@ -156,8 +245,21 @@ def main():
         f"  > Avg. Verification Time: {pqc_results['avg_verify_time'] * 1e6:.3f} microseconds\n"
     )
 
-    # 2. Symmetric Encryption/Decryption Overhead
-    print("---- 2. Symmetric Encryption (AES-256-GCM) Overhead ----")
+    # 2. Classical Auth - RSA
+    print("---- 2. Classical Authentication (RSA-3072) ----")
+    rsa_results = run_rsa_benchmark()
+    print(f"  Result:")
+    print(
+        f"  > RSA-3072 Key Gen:     {rsa_results['rsa_keygen']:.3f} seconds (Note: Slow!)"
+    )
+    print(f"  > RSA-3072 Sign:        {rsa_results['rsa_sign'] * 1e6:.3f} microseconds")
+    print(
+        f"  > RSA-3072 Verify:      {rsa_results['rsa_verify'] * 1e6:.3f} microseconds\n"
+    )
+
+    # 3. Symmetric Encryption/Decryption
+    print("---- 3. Symmetric Encryption (AES-256-GCM) ----")
+    print("  (Standard for both Classical and Hybrid systems)")
     aes_results = run_aes_benchmark()
     print(f"  Result:")
     print(f"  > Payload Size: {aes_results['size']} bytes (1 KB)")
@@ -168,8 +270,16 @@ def main():
         f"  > Avg. Decryption Time: {aes_results['avg_decrypt_time'] * 1e6:.3f} microseconds\n"
     )
 
-    # 3. QKD Key Generation Rate
-    print("---- 3. QKD (BB84 Simulation) Key Generation Rate ----")
+    # 4. Classical Key Exchange - ECDH
+    print("---- 4. Classical Key Exchange (ECDH P-256) ----")
+    ecdh_results = run_ecdh_benchmark()
+    print(f"  Result:")
+    print(
+        f"  > ECDH P-256 Exchange:  {ecdh_results['ecdh_exchange'] * 1e6:.3f} microseconds (Keys + Derivation)\n"
+    )
+
+    # 5. QKD Key Generation Rate
+    print("---- 5. QKD (BB84 Simulation) Key Generation Rate ----")
     print(
         "  Note: This benchmarks the full protocol simulation (Transmission + Sifting)."
     )
