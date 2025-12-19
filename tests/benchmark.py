@@ -135,6 +135,7 @@ def run_rsa_benchmark():
         "rsa_verify": avg_rsa_verify,
     }
 
+
 class ECDH:
     def __init__(self, curve, key):
         self.curve = curve
@@ -249,9 +250,7 @@ def main():
     print("---- 2. Classical Authentication (RSA-3072) ----")
     rsa_results = run_rsa_benchmark()
     print(f"  Result:")
-    print(
-        f"  > RSA-3072 Key Gen:     {rsa_results['rsa_keygen']:.3f} seconds (Note: Slow!)"
-    )
+    print(f"  > RSA-3072 Key Gen:     {rsa_results['rsa_keygen']:.3f} seconds")
     print(f"  > RSA-3072 Sign:        {rsa_results['rsa_sign'] * 1e6:.3f} microseconds")
     print(
         f"  > RSA-3072 Verify:      {rsa_results['rsa_verify'] * 1e6:.3f} microseconds\n"
@@ -262,7 +261,6 @@ def main():
     print("  (Standard for both Classical and Hybrid systems)")
     aes_results = run_aes_benchmark()
     print(f"  Result:")
-    print(f"  > Payload Size: {aes_results['size']} bytes (1 KB)")
     print(
         f"  > Avg. Encryption Time: {aes_results['avg_encrypt_time'] * 1e6:.3f} microseconds"
     )
