@@ -166,8 +166,8 @@ sudo ninja install
 sudo ldconfig
 
 cd ~
-git clone https://github.com/philipbilbo/hybrid-quantum-communication.git
-cd hybrid-quantum-communication
+git clone https://github.com/nicoletaftn/CYBER3-Quantum.git
+cd CYBER3-Quantum
 
 # Create virtual environment
 python3 -m venv venv
@@ -234,8 +234,8 @@ Clone the project and setup Python
 ```bash
 # Clone the project
 cd ~/Desktop  # or your preferred location
-git clone https://github.com/philipbilbo/hybrid-quantum-communication.git
-cd hybrid-quantum-communication
+git clone https://github.com/nicoletaftn/CYBER3-Quantum.git
+cd CYBER3-Quantum
 
 # Create virtual environment
 python3 -m venv venv
